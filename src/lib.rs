@@ -1,9 +1,10 @@
 use clap::Parser;
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
+use log::debug;
 use ratatui::prelude::{
     Backend, Buffer,
-    Constraint::{self, Length},
+    Constraint::{self, Percentage},
     Layout, Line, Rect, Span, Style, Stylize, Terminal, Widget,
 };
 use ratatui::widgets::{Block, List, Paragraph, Wrap};
@@ -12,12 +13,10 @@ use std::time::Duration;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about=None)]
 pub struct Config {
-    pub file1: String,
-    pub file2: String,
+    pub file: String,
 }
 
 #[derive(Debug, Default)]
-
 pub struct App<'a> {
     state: AppState,
     nav: List<'a>,
@@ -32,13 +31,14 @@ enum AppState {
 }
 
 impl App<'_> {
-    pub fn new(_config: &Config) -> Self {
+    pub fn new(config: &Config) -> Self {
         let items1: Vec<&str> = vec!["Item 1", "Item 2", "Item 3"];
-        let text = App::load_text();
+        let text = App::load_text(config);
         Self {
             state: AppState::Running,
-            nav: List::new(items1).block(Block::bordered().title("Steps")), //.style(Style::new().white().on_black())
-            //.wrap(Wrap { trim: true }),
+            nav: List::new(items1)
+                .block(Block::bordered().title("Steps"))
+                .style(Style::new().white().on_black()),
             text: Paragraph::new(*text)
                 .block(Block::bordered().title("Log"))
                 .style(Style::new().white().on_black())
@@ -46,7 +46,8 @@ impl App<'_> {
         }
     }
 
-    fn load_text() -> Box<Vec<Line<'static>>> {
+    fn load_text(config: &Config) -> Box<Vec<Line<'static>>> {
+        debug!("loading file {}", config.file);
         Box::new(vec![
             Line::from(vec![
                 Span::raw("First"),
@@ -93,7 +94,7 @@ impl Widget for &mut App<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         use Constraint::Min;
         // calculate rects where widgets should be rendered
-        let widget_areas: Vec<Rect> = Layout::horizontal([Length(20), Min(0)])
+        let widget_areas: Vec<Rect> = Layout::horizontal([Percentage(15), Min(0)])
             .areas::<2>(area)
             .to_vec();
         (&self.nav).render(widget_areas[0], buf);
