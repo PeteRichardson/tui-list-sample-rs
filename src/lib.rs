@@ -1,14 +1,15 @@
 use clap::Parser;
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
-use log::debug;
 use ratatui::prelude::{
     Backend, Buffer,
     Constraint::{self, Percentage},
-    Layout, Line, Rect, Span, Style, Stylize, Terminal, Widget,
+    Layout, Line, Rect, Style, Stylize, Terminal, Widget,
 };
 use ratatui::widgets::{Block, List, Paragraph, Wrap};
 use std::time::Duration;
+mod text_utils;
+use text_utils::load;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about=None)]
@@ -41,22 +42,14 @@ impl App<'_> {
                 .style(Style::new().white().on_black()),
             text: Paragraph::new(*text)
                 .block(Block::bordered().title("Log"))
-                .style(Style::new().white().on_black())
+                //.style(Style::new().white().on_black())
                 .wrap(Wrap { trim: true }),
         }
     }
 
     fn load_text(config: &Config) -> Box<Vec<Line<'static>>> {
-        debug!("loading file {}", config.file);
-        Box::new(vec![
-            Line::from(vec![
-                Span::raw("First"),
-                Span::styled("line", Style::new().green().italic()),
-                ".".into(),
-            ]),
-            Line::from("Second line".red()),
-            "Third line".into(),
-        ])
+        let text = load(config);
+        text
     }
 
     /// This is the main event loop for the app.
