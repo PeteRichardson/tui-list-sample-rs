@@ -6,13 +6,14 @@ use std::io::{BufRead, BufReader};
 pub fn load(config: &Config) -> Box<Vec<Line<'static>>> {
     let file = File::open(config.file.clone()).expect("no such file");
     let buf = BufReader::new(file);
-    let textloglines = buf
-        .lines()
-        .map(|l| stylize(Line::from(l.unwrap())))
-        .collect();
+    let textloglines = buf.lines().map(|s| stylize(s.unwrap())).collect();
     Box::new(textloglines)
 }
 
-pub fn stylize<'a>(l: Line<'a>) -> Line<'a> {
-    l.clone().red()
+pub fn stylize<'a>(s: String) -> Line<'a> {
+    if s.contains("UUID: ") {
+        Line::from(s).clone().white()
+    } else {
+        Line::from(s).clone().dark_gray()
+    }
 }
