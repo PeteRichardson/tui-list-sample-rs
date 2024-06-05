@@ -8,16 +8,11 @@ pub fn load(config: &Config) -> Box<Vec<Line<'static>>> {
     let buf = BufReader::new(file);
     let textloglines = buf
         .lines()
-        .map(|l| l.expect("Could not parse line"))
-        .map(|l| Line::from(l).red())
+        .map(|l| stylize(Line::from(l.unwrap())))
         .collect();
     Box::new(textloglines)
 }
 
-// fn apply_style(l: &mut Line) -> Line {
-//     l
-// }
-
-// pub fn stylize(unstyled_lines: &mut Vec<Line<'static>>) -> Box<Vec<Line<'static>>> {
-//     unstyled_lines.iter_mut().map(apply_style).collect()
-// }
+pub fn stylize<'a>(l: Line<'a>) -> Line<'a> {
+    l.clone().red()
+}
