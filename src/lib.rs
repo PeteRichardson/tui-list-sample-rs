@@ -9,17 +9,21 @@ use ratatui::prelude::{
 use ratatui::widgets::{Block, List, Paragraph, Wrap};
 use std::time::Duration;
 mod text_utils;
+use regex::Regex;
+use std::collections::HashMap;
+use std::path::PathBuf;
 use text_utils::load;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about=None)]
 pub struct Config {
-    pub file: String,
+    pub input_file_path: PathBuf,
 }
 
 #[derive(Debug, Default)]
 pub struct App<'a> {
     state: AppState,
+    //toc: HashMap<Line<'a>, usize>,
     nav: List<'a>,
     text: Paragraph<'a>,
 }
@@ -32,23 +36,37 @@ enum AppState {
 }
 
 impl App<'_> {
-    pub fn new(config: &Config) -> Self {
-        let items1: Vec<&str> = vec!["Item 1", "Item 2", "Item 3"];
+    pub fn new(config: Config) -> Self {
+        // text is the stylized text of the log file
         let text = App::load_text(config);
+
+        // pattern to match the section headers
+        let _pattern = Regex::new(r"^[\+]+ (Section [\d\.]+)").unwrap();
+
+        // map of section headers to their line number (first line is line 1, not 0)
+        // unfortunately hashmap is unordered, so we need to retain the original order
+        let mut toc_records: HashMap<Line, usize> = HashMap::new();
+        for (offset, line) in text.iter().enumerate() {
+            toc_records.insert(line.clone(), offset + 1);
+        }
+        // nav_entries used to build the nav bar
+        // ideally filtered by pattern and sorted by line number
+        let nav_entries: Vec<Line<'_>> = toc_records.keys().cloned().collect();
+
         Self {
             state: AppState::Running,
-            nav: List::new(items1)
+            // toc: toc_records,  // eventually will need to retain this to enable navigation
+            nav: List::new(nav_entries)
                 .block(Block::bordered().title("Steps"))
                 .style(Style::new().white().on_black()),
             text: Paragraph::new(text)
                 .block(Block::bordered().title("Log"))
-                //.style(Style::new().white().on_black())
                 .wrap(Wrap { trim: true }),
         }
     }
 
-    fn load_text(config: &Config) -> Vec<Line<'static>> {
-        load(config)
+    fn load_text(config: Config) -> Vec<Line<'static>> {
+        load(config).unwrap()
     }
 
     /// This is the main event loop for the app.

@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     debug!("{:?}", config);
 
     let terminal = init_terminal()?;
-    App::new(&config).run(terminal)?;
+    App::new(config).run(terminal)?;
     restore_terminal()?;
 
     Ok(())
