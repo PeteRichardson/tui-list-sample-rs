@@ -40,16 +40,15 @@ impl App<'_> {
             nav: List::new(items1)
                 .block(Block::bordered().title("Steps"))
                 .style(Style::new().white().on_black()),
-            text: Paragraph::new(*text)
+            text: Paragraph::new(text)
                 .block(Block::bordered().title("Log"))
                 //.style(Style::new().white().on_black())
                 .wrap(Wrap { trim: true }),
         }
     }
 
-    fn load_text(config: &Config) -> Box<Vec<Line<'static>>> {
-        let text = load(config);
-        text
+    fn load_text(config: &Config) -> Vec<Line<'static>> {
+        load(config)
     }
 
     /// This is the main event loop for the app.
@@ -68,15 +67,13 @@ impl App<'_> {
     /// Handle any events that have occurred since the last time the app was rendered.
     fn handle_events(&mut self) -> Result<()> {
         let timeout = Duration::from_secs_f32(1.0 / 60.0);
-        if event::poll(timeout)? {
-            if event::poll(std::time::Duration::from_millis(16))? {
-                if let Event::Key(key) = event::read()? {
-                    if key.kind == KeyEventKind::Press
-                        && (key.code == KeyCode::Char('q') || key.code == KeyCode::Char('Q'))
-                    {
-                        self.state = AppState::Quit;
-                    };
-                }
+        if event::poll(timeout)? && event::poll(std::time::Duration::from_millis(16))? {
+            if let Event::Key(key) = event::read()? {
+                if key.kind == KeyEventKind::Press
+                    && (key.code == KeyCode::Char('q') || key.code == KeyCode::Char('Q'))
+                {
+                    self.state = AppState::Quit;
+                };
             }
         }
         Ok(())
